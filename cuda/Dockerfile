@@ -4,8 +4,7 @@ FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai PIP_ROOT_USER_ACTION=ignore PATH="/root/miniconda3/bin:${PATH}"
 ARG PATH="/root/miniconda3/bin:${PATH}"
-RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo '$TZ' > /etc/timezone && \
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo '$TZ' > /etc/timezone && \
     rm -rf /etc/apt/sources.list.d/cuda* /etc/apt/sources.list.d/* && gpg --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC 2>&1 > /dev/null && \
     gpg --export --armor A4B469963BF863CC | apt-key add - 2>&1 > /dev/null && apt-get update && \
     apt-get install -y tmux screen vim wget curl net-tools apt-utils unzip zip git openssl libaio1 libaio-dev iputils-ping openssh-server openssh-client && \
