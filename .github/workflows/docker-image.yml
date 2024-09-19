@@ -34,7 +34,7 @@ jobs:
           while IFS= read -r line; do
             hubkey=$(echo "$line" | grep -oP '(?<=cuda:)\d+\.\d+\.\d+(?=-)')
             echo "Extracted hubkey: $hubkey"
-            IMAGE_TAG="***/cuda:$hubkey"
+            IMAGE_TAG="shiertier/cuda:$hubkey"
             docker manifest inspect "$IMAGE_TAG" > /dev/null 2>&1
             if [ $? -ne 0 ]; then
               echo "Image $IMAGE_TAG does not exist."
