@@ -32,13 +32,29 @@ jobs:
       - name: Process each cuda image
         run: |
           while IFS= read -r line; do
-            hubkey=$(echo "$line" | grep -oP '(?<=cuda:)\d+\.\d+\.\d+(?=-)')
-            IMAGE_TAG="shiertier/cuda:$hubkey"
-            docker manifest inspect "$IMAGE_TAG" > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
-              docker build -t "$IMAGE_TAG" -f cuda/Dockerfile --build-arg BASE_IMAGE="$line" .
-              docker push "$IMAGE_TAG"
-            else
-              echo "Image $IMAGE_TAG already exists, skipping build."
-            fi
-          done < cuda/cuda_images
+            while IFS= read -r line; do
+              hubkey=$(echo "$line" | grep -oP '(?<=cuda:)\d+\.\d+\.\d+(?=-)')
+              echo "Extracted hubkey: $hubkey"
+              IMAGE_TAG="***/cuda:$hubkey"
+              docker manifest inspect "$IMAGE_TAG" > /dev/null 2>&1
+              if [ $? -ne 0 ]; then
+                echo "Image $IMAGE_TAG does not exist."
+                docker build -t "$IMAGE_TAG" -f cuda/Dockerfile --build-arg BASE_IMAGE="$line" .
+                if [ $? -ne 0 ]; then
+                  echo "Failed to build image $IMAGE_TAG."
+                  exit 1
+                else
+                  echo "Successfully built image $IMAGE_TAG."
+                fi
+                docker push "$IMAGE_TAG"
+                if [ $? -ne 0 ]; then
+                  echo "Failed to push image $IMAGE_TAG."
+                  exit 1
+                else
+                  echo "Successfully pushed image $IMAGE_TAG."
+                fi
+              else
+                echo "Image $IMAGE_TAG already exists, skipping build."
+              fi
+            done < cuda/cuda_images
+          done
