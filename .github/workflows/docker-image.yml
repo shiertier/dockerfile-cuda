@@ -31,15 +31,22 @@ jobs:
 
       - name: Process each cuda image
         run: |
+          # 处理文件中的每一行
           while IFS= read -r line; do
+            # 提取 hubkey
             hubkey=$(echo "$line" | grep -oP '(?<=cuda:)\d+\.\d+\.\d+(?=-)')
             echo "Extracted hubkey: $hubkey"
+          
+            # 构建镜像标签
             IMAGE_TAG="shiertier/cuda:$hubkey"
-            docker manifest inspect "$IMAGE_TAG"
-            echo "manifest inspect sucess"
-            if [ $? -ne 0 ]; then
+          
+            # 检查镜像是否存在
+            manifest_output=$(docker manifest inspect "$IMAGE_TAG" 2>&1)
+            if [[ "$manifest_output" == *"no such manifest:"* ]]; then
               echo "Image $IMAGE_TAG does not exist."
               echo "start building"
+          
+              # 构建镜像
               docker build -t "$IMAGE_TAG" -f cuda/Dockerfile --build-arg BASE_IMAGE="$line" .
               if [ $? -ne 0 ]; then
                 echo "Failed to build image $IMAGE_TAG."
@@ -47,6 +54,8 @@ jobs:
               else
                 echo "Successfully built image $IMAGE_TAG."
               fi
+          
+              # 推送镜像
               docker push "$IMAGE_TAG"
               if [ $? -ne 0 ]; then
                 echo "Failed to push image $IMAGE_TAG."
